@@ -1,4 +1,5 @@
 from ship import Ship
+import random
 
 class Tile():
     def __init__(self, position: tuple([int, int])):
@@ -11,6 +12,12 @@ class Tile():
             return False
         self.contents = ship
         return True
+    
+    def ship_present(self) -> bool:
+        if self.contents is None:
+            return False
+        else:
+            return True
 
     def hit_contents(self) -> int:
         assert(not self.hit)
@@ -41,7 +48,16 @@ class Board():
                 if self.grid[x][y].contents is None:
                     line += "O"
                 else:
-                    line += "X"
+                    if self.grid[x][y].contents.type == "Carrier":
+                        line += "C"
+                    if self.grid[x][y].contents.type == "Destroyer":
+                        line += "D"
+                    if self.grid[x][y].contents.type == "Cruiser":
+                        line += "U"
+                    if self.grid[x][y].contents.type == "Submarine":
+                        line += "S"
+                    if self.grid[x][y].contents.type == "Battleship":
+                        line += "B"
             print(line)
 
     def print_hit_map(self):
@@ -61,14 +77,11 @@ class Board():
         start = positions[0]
         end = positions[1]
         vector = (start[0] - end[0], start[1] - end[1])
-        print(vector)
         result = []
         if vector[0] == 0:
             length = vector[1]
-            print("Length: " + str(length))
             if length < 0:
                 for i in range(0, length - 1, -1):
-                    print("Appending...")
                     result.append((start[0], start[1] + (-1 * i)))
             if length > 0:
                 for i in range(0, length + 1):
@@ -76,12 +89,74 @@ class Board():
         elif vector[1] == 0:
             length = vector[0]
             if length < 0:
-                for i in range(0, length - 1):
+                for i in range(0, length - 1, -1):
                     result.append((start[0] + (-1 * i), start[1]))
             if length > 0:
                 for i in range(0, length + 1):
                     result.append((start[0] + (-1 * i), start[1]))
         return result
+
+    
+    def create_ship_random(self, n: int, name: str):
+        finished = False
+        while not finished:
+            vertical = bool(random.randint(0, 1))
+            positive = bool(random.randint(0, 1))
+            x,y = -1,-1
+            if vertical:
+                y = random.randint(0, self.size - 1)
+                if positive:
+                    if x + (n-1) >= self.size:
+                        continue
+                    else:
+                        x = random.randint(0, self.size - n)
+                        end_x, end_y = x + (n - 1), y
+                else:
+                    if x - (n - 1) < 0:
+                        continue
+                    else:
+                        x = random.randint(n-1, self.size - 1)
+                        end_x, end_y = x - (n - 1), y
+            else:
+                x = random.randint(0, self.size - 1)
+                if positive:
+                    if y + (n-1) >= self.size:
+                        continue
+                    else:
+                        y = random.randint(0, self.size - n)
+                        end_x, end_y = x, y + (n-1)
+                else:
+                    if y - (n-1) < 0:
+                        continue
+                    else:
+                        y = random.randint(n-1, self.size - 1)
+                        end_x, end_y = x, y - (n-1)
+            positions = self.find_positions(((x, y), (end_x, end_y)))
+            print("n: " + str(n))
+            print("x: " + str(x))
+            print("y: " + str(y))
+            print("end x: " + str(end_x))
+            print("end y: " + str(end_y))
+            ship = Ship(name, ((x,y), (end_x, end_y)))
+            print(len(positions))
+            assert(len(positions) == n)
+            flag = False
+            for position in positions:
+                if self.grid[position[0]][position[1]].ship_present():
+                    flag = True
+            if flag:
+                continue
+            for position in positions:
+                self.grid[position[0]][position[1]].create_contents(ship)
+            finished = True
+        
+    def place_random(self):
+        self.create_ship_random(5, "Carrier")
+        self.create_ship_random(4, "Battleship")
+        self.create_ship_random(3, "Cruiser")
+        self.create_ship_random(3, "Submarine")
+        self.create_ship_random(2, "Destroyer")
+            
 
     def place_ships(self, carrier_pos: tuple([tuple([int, int]), tuple([int, int])]), battleship_pos: tuple([tuple([int, int]), tuple([int, int])]), cruiser_pos: tuple([tuple([int, int]), tuple([int, int])]), submarine_pos: tuple([tuple([int, int]), tuple([int, int])]), destroyer_pos: tuple([tuple([int, int]), tuple([int, int])])) -> bool:
         carrier = Ship("Carrier", carrier_pos)

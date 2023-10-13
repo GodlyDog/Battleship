@@ -9,6 +9,10 @@ def parse_input(string: str) -> tuple([int, int]):
 def request_placement(board: Board, player: str):
     correct = False
     first = True
+    value = input("Place ships randomly? (y/n)")
+    if value == "y":
+        board.place_random()
+        return
     while not correct:
         if not first:
             print("Invalid positions, please input different positions")
@@ -42,6 +46,7 @@ def request_placement(board: Board, player: str):
 
 def request_fire(board: Board, player: str) -> bool:
     board.print_hit_map()
+    #board.debug_print()
     inputting = True
     while inputting:
         target = input("Commander, where is our target?")
