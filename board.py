@@ -34,6 +34,7 @@ class Board():
         self.misses = []
         self.hits = []
         self.ships_remaining = 5
+        self.sunken_ships = []
         # x is a row number (the board indexes down then over)
         for x in range(self.size):
             self.grid.append([])
@@ -132,13 +133,13 @@ class Board():
                         y = random.randint(n-1, self.size - 1)
                         end_x, end_y = x, y - (n-1)
             positions = self.find_positions(((x, y), (end_x, end_y)))
-            print("n: " + str(n))
-            print("x: " + str(x))
-            print("y: " + str(y))
-            print("end x: " + str(end_x))
-            print("end y: " + str(end_y))
+            # print("n: " + str(n))
+            # print("x: " + str(x))
+            # print("y: " + str(y))
+            # print("end x: " + str(end_x))
+            # print("end y: " + str(end_y))
             ship = Ship(name, ((x,y), (end_x, end_y)))
-            print(len(positions))
+            # print(len(positions))
             assert(len(positions) == n)
             flag = False
             for position in positions:
@@ -209,9 +210,14 @@ class Board():
         if hit_or_miss >= 0:
             self.hits.append(position)
             if hit_or_miss == 1:
+                self.sunken_ships.append(self.grid[position[0]][position[1]].contents.type)
                 self.ships_remaining -= 1
             return (hit_or_miss, self.grid[position[0]][position[1]].contents.type)
-
+        
+    def print_sunken_ships(self):
+        print("Ships Sunk:")
+        for ship in self.sunken_ships:
+            print(ship)
 
         
 

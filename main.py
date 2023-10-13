@@ -1,5 +1,6 @@
 from board import Board
 import os
+from battleship_bot import BattleshipBot
 
 def parse_input(string: str) -> tuple([int, int]):
     string = string.split(",")
@@ -45,6 +46,7 @@ def request_placement(board: Board, player: str):
         correct = board.place_ships((carrier_start, carrier_end), (battleship_start, battleship_end), (cruiser_start, cruiser_end), (submarine_start, submarine_end), (destroyer_start, destroyer_end))
 
 def request_fire(board: Board, player: str) -> bool:
+    board.print_sunken_ships()
     board.print_hit_map()
     #board.debug_print()
     inputting = True
@@ -66,24 +68,63 @@ def request_fire(board: Board, player: str) -> bool:
         print("Game over! " + player + " wins!")
         return True
     return False
-    
 
+def bot_fire(board: Board, player: str, bot: BattleshipBot) -> bool:
+    coords = bot.bot_fire()
+    status = board.fire(coords)
+    if status[0] < 0:
+        bot.bot_response(coords, False)
+        print("Miss!")
+    if status[0] == 0:
+        bot.bot_response(coords, True)
+        print("Hit!")
+    if status[0] == 1:
+        bot.bot_response(coords, True)
+        print("Hit! Sunk " + status[1])
+    if board.ships_remaining == 0:
+        print("Game over! " + player + " wins!")
+        return True
+    board.print_hit_map()
+    bot.print_probs()
+    return False
+    
 def repl(player1_board: Board, player2_board: Board):
-    finished = False
+    bot_check = True
+    bot = False
+    while bot_check:
+        bot_desired = input("Play with a bot? (y/n)")
+        if bot_desired == "y":
+            bot = True
+            bot_check = False
+        if bot_desired == "n":
+            bot_check = False
     request_placement(player1_board, "1")
     os.system("cls" if os.name == "nt" else "clear")
-    request_placement(player2_board, "2")
-    os.system("cls" if os.name == "nt" else "clear")
-    while not finished:
-        input("Player 1 ready to fire? Press any key when ready.")
-        finished = request_fire(player2_board, "Player 1")
-        if finished:
-            break
-        input("Player 2 ready to fire? Press any key when ready.")
-        finished = request_fire(player1_board, "Player 2")
-
-        
-        
+    if bot:
+        bot_player = BattleshipBot(player1_board)
+        player2_board.place_random()
+        finished = False
+        while not finished:
+            input("Player 1 ready to fire? Press enter when ready.")
+            finished = request_fire(player2_board, "Player 1")
+            if finished:
+                break
+            finished = bot_fire(player1_board, "Player 2", bot_player)
+            if finished:
+                break
+    else:
+        request_placement(player2_board, "2")
+        os.system("cls" if os.name == "nt" else "clear")
+        finished = False
+        while not finished:
+            input("Player 1 ready to fire? Press enter when ready.")
+            finished = request_fire(player2_board, "Player 1")
+            if finished:
+                break
+            input("Player 2 ready to fire? Press enter when ready.")
+            finished = request_fire(player1_board, "Player 2")
+            if finished:
+                break
 
 def main():
     b1 = Board()
